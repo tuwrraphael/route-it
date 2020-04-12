@@ -3,14 +3,13 @@
 
 <head>
     <meta charset="utf-8">
-    <title>HTML Element SPA Router</title>
+    <title>route-it - simple example</title>
     <base href="/simple/">
 </head>
 
 <body>
     <script type="module">
-        import { Router } from "../router.js"
-        import { BodyChildRouteRenderer } from "../body-child-route-renderer.js"
+        import { Router, BodyChildRouteRenderer } from "https://unpkg.com/route-it@1.0.0/dist/index.js"
 
         function makeSpaLink(a, router) {
             a.addEventListener("click", ev => {
