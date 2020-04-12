@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>HTML Element SPA Router</title>
+    <base href="/path-parameter/">
+</head>
+
+<body>
+    <script type="module">
+        import { Router } from "../router.js"
+        import { ContainerRouteRenderer } from "../container-route-renderer.js"
+
+        function makeSpaLink(a, router) {
+            a.addEventListener("click", ev => {
+                ev.preventDefault();
+                router.navigate(a.getAttribute("href"));
+            });
+        }
+
+        function createDetailPage(id) {
+            let c = document.createElement("div");
+            c.innerText = `Detail page for ${id}`;
+            return c;
+        }
+
+        function createListPage(router) {
+            let c = document.createElement("div");
+            let span = document.createElement("span");
+            span.innerText = "loading...";
+            c.appendChild(span);
+            setTimeout(() => {
+                c.removeChild(span);
+                let ol = document.createElement("ol");
+                c.appendChild(ol);
+                let ids = ["13211", "564566", "dasdasd"];
+                ids.map(id => {
+                    let listelement = document.createElement("li");
+                    let a = document.createElement("a");
+                    a.href = `list/${id}`;
+                    a.innerText = `Entry ${id}`;
+                    makeSpaLink(a, router);
+                    listelement.appendChild(a);
+                    return listelement;
+                })
+                    .forEach(l => ol.appendChild(l));
+            }, 600);
+            return c;
+        }
+
+        class MyApplicationRouteResolver {
+            resolve(lastRoute, currentRoute, router) {
+                let listParamRegex = /^list\/(\S+)/;
+                if (currentRoute == "list") {
+                    return createListPage(router);
+                } else if (listParamRegex.test(currentRoute)) {
+                    let res = listParamRegex.exec(currentRoute);
+                    return createDetailPage(res[1]);
+                }
+                else if (currentRoute == "") {
+                    return document.getElementById("home-template").content.cloneNode(true).children[0];
+                }
+                else {
+                    return false;
+                }
+            }
+        }
+        let container = document.getElementById("router-container");
+        let router = new Router(new MyApplicationRouteResolver(), new ContainerRouteRenderer(container));
+        router.run();
+        document.querySelectorAll("nav > a").forEach(a => makeSpaLink(a, router));
+    </script>
+
+    <nav>
+        <a href="" id="test-link2">home</a>
+        <a href="list" id="test-link">list</a>
+    </nav>
+    <div id="router-container"></div>
+
+    <template id="home-template">
+        <div>
+            Home 🍺
+        </div>
+    </template>
+</body>
+
+</html>

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>HTML Element SPA Router</title>
+    <base href="/constant-nav/">
+</head>
+
+<body>
+    <script type="module">
+        import { Router } from "../router.js"
+        import { ContainerRouteRenderer } from "../container-route-renderer.js"
+
+        function makeSpaLink(a, router) {
+            a.addEventListener("click", ev => {
+                ev.preventDefault();
+                router.navigate(a.getAttribute("href"));
+            });
+        }
+
+        function createTestPage() {
+            let c = document.createElement("div");
+            c.innerText = "Test (try back button)";
+            return c;
+        }
+
+        function createTestPageFromTemplate() {
+            return document.getElementById("page2template").content.cloneNode(true).children[0];
+        }
+
+        class MyApplicationRouteResolver {
+            resolve(lastRoute, currentRoute, router) {
+                switch (currentRoute) {
+                    case "test":
+                        return createTestPage();
+                    case "":
+                        return createTestPageFromTemplate();
+                    default:
+                        return false;
+                }
+            }
+        }
+        let container = document.getElementById("router-container");
+        let router = new Router(new MyApplicationRouteResolver(), new ContainerRouteRenderer(container));
+        router.run();
+        document.querySelectorAll("nav > a").forEach(a => makeSpaLink(a, router));
+    </script>
+
+    <nav>
+        <a href="" id="test-link2">home</a>
+        <a href="test" id="test-link">go to test page</a>
+    </nav>
+    <div id="router-container"></div>
+
+    <template id="page2template">
+        <div>
+            Home 🍺
+        </div>
+    </template>
+</body>
+
+</html>

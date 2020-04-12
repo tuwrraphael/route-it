@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>HTML Element SPA Router</title>
+    <base href="/simple/">
+</head>
+
+<body>
+    <script type="module">
+        import { Router } from "../router.js"
+        import { BodyChildRouteRenderer } from "../body-child-route-renderer.js"
+
+        function makeSpaLink(a, router) {
+            a.addEventListener("click", ev => {
+                ev.preventDefault();
+                router.navigate(a.getAttribute("href"));
+            });
+        }
+
+        function createDefaultPage(router) {
+            let c = document.createElement("div");
+            c.innerHTML = `
+            <a href="test" id="test-link">go to test page</a>
+            <a href="from-template" id="test-link2">go to test page 2</a>
+            `;
+            ["#test-link", "#test-link2"]
+                .forEach(id => makeSpaLink(c.querySelector(id), router));
+            return c;
+        }
+
+        function createTestPage() {
+            let c = document.createElement("div");
+            c.innerText = "Test (try back button)";
+            return c;
+        }
+
+        function createTestPageFromTemplate() {
+            return document.getElementById("page2template").content.cloneNode(true).children[0];
+        }
+
+        class MyApplicationRouteResolver {
+            resolve(lastRoute, currentRoute, router) {
+                switch (currentRoute) {
+                    case "test":
+                        return createTestPage();
+                    case "from-template":
+                        return createTestPageFromTemplate();
+                    default:
+                        return new createDefaultPage(router);
+                }
+            }
+        }
+
+        new Router(new MyApplicationRouteResolver(), new BodyChildRouteRenderer())
+            .run();
+    </script>
+
+    <template id="page2template">
+        <div>
+            This is page 2.
+            <p>🍺</p>
+        </div>
+    </template>
+</body>
+
+</html>
