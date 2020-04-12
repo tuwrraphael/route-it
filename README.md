@@ -36,6 +36,6 @@ new Router(new MyApplicationRouteResolver(), new BodyChildRouteRenderer())
 ~~~
 
 ## Examples
-* [Simple two pages](./simple/index.html)
-* [Top navbar](./constant-nav/index.html)
-* [Parsing path parameters](./path-parameter/index.html)
+* Simple two pages [src](./simple/index.html) [demo](https://tuwrraphael.github.io/route-it/simple)
+* Top navbar [src](./constant-nav/index.html) [demo](https://tuwrraphael.github.io/route-it/constant-nav)
+* Parsing path parameters [src](./path-parameter/index.html) [demo](https://tuwrraphael.github.io/route-it/path-parameter)
