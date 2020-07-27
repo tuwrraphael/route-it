@@ -3,8 +3,8 @@
 
 <head>
     <meta charset="utf-8">
-    <title>route-it - simple example</title>
-    <base href="/route-it/simple/">
+    <title>route-it - async example</title>
+    <base href="/route-it/async/">
 </head>
 
 <body>
@@ -41,14 +41,19 @@
 
         class MyApplicationRouteResolver {
             resolve(lastRoute, currentRoute, router) {
-                switch (currentRoute) {
-                    case "test":
-                        return createTestPage();
-                    case "from-template":
-                        return createTestPageFromTemplate();
-                    default:
-                        return new createDefaultPage(router);
-                }
+                return new Promise((resolve) => {
+                    // load something async
+                    setTimeout(() => {
+                        switch (currentRoute) {
+                            case "test":
+                                resolve(createTestPage());
+                            case "from-template":
+                                resolve(createTestPageFromTemplate());
+                            default:
+                                resolve(new createDefaultPage(router));
+                        }
+                    }, 1000);
+                });
             }
         }
 
