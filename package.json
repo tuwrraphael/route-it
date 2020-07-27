@@ -1,6 +1,6 @@
 {
   "name": "route-it",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "dead simple vanilla js single page router",
   "scripts": {
     "build": "rollup -c rollup.config.js"

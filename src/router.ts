@@ -2,6 +2,10 @@ export interface RouteResolver<T> {
     resolve(lastRoute: string, currentRoute: string, router: Router<any>): T | false;
 }
 
+export interface AsyncRouteResolver<T> {
+    resolve(lastRoute: string, currentRoute: string, router: Router<any>): Promise<T | false>;
+}
+
 export interface RouteRenderer<T> {
     render(component: T): void;
 }
@@ -12,7 +16,7 @@ export class Router<T> {
     private baseHref: string;
     private popStateListener: (this: Window, ev: PopStateEvent) => any;
 
-    constructor(private routeResolver: RouteResolver<T>,
+    constructor(private routeResolver: RouteResolver<T> | AsyncRouteResolver<T>,
         private routeRenderer: RouteRenderer<T>) {
         this.popStateListener = this.handlePopState.bind(this);
     }
@@ -33,15 +37,17 @@ export class Router<T> {
         window.removeEventListener("popstate", this.popStateListener);
     }
 
-    private doRouting(pathname: string) {
+    private doRouting(pathname: string): Promise<boolean> {
         let currentRoute = this.getRoute(pathname);
-        let resolved = this.routeResolver.resolve(this.lastRoute, currentRoute, this);
-        if (resolved) {
-            this.routeRenderer.render(resolved);
-            this.lastRoute = currentRoute;
-            return true;
-        }
-        return false;
+        return Promise.resolve(this.routeResolver.resolve(this.lastRoute, currentRoute, this))
+            .then(resolved => {
+                if (resolved) {
+                    this.routeRenderer.render(resolved);
+                    this.lastRoute = currentRoute;
+                    return true;
+                }
+                return false;
+            });
     }
 
     private getRoute(pathname: string) {
@@ -52,8 +58,10 @@ export class Router<T> {
 
     navigate(relative: string, title: string) {
         let url = new URL(relative, this.baseHref);
-        if (this.doRouting(url.pathname)) {
-            window.history.pushState({}, title || document.title, url.href);
-        }
+        this.doRouting(url.pathname).then(resolved => {
+            if (resolved) {
+                window.history.pushState({}, title || document.title, url.href);
+            }
+        });
     }
 }
