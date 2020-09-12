@@ -56,11 +56,15 @@ export class Router<T> {
         return exactBaseHrefMatch ? '/' : startsWithBase ? pathname.substring(this.basePrefix.length) : pathname;
     }
 
-    navigate(relative: string, title: string) {
+    navigate(relative: string, title: string, replace?: boolean) {
         let url = new URL(relative, this.baseHref);
         this.doRouting(url.pathname).then(resolved => {
             if (resolved) {
-                window.history.pushState({}, title || document.title, url.href);
+                if (replace) {
+                    window.history.replaceState({}, title || document.title, url.href);
+                } else {
+                    window.history.pushState({}, title || document.title, url.href);
+                }
             }
         });
     }
