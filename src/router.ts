@@ -10,6 +10,9 @@ export interface RouteRenderer<T> {
     render(component: T): void;
 }
 
+
+type ResolveResult<T> = false | { resolved: T, currentRoute: string };
+
 export class Router<T> {
     private lastRoute: string = null;
     private basePrefix: string;
@@ -22,7 +25,7 @@ export class Router<T> {
     }
 
     private handlePopState(ev: PopStateEvent) {
-        this.doRouting(window.location.pathname);
+        this.resolve(window.location.pathname).then(resolveResult => this.render(resolveResult));
     }
 
     run() {
@@ -30,24 +33,30 @@ export class Router<T> {
         this.basePrefix = baseElement.getAttribute("href");
         this.baseHref = baseElement.href;
         window.addEventListener("popstate", this.popStateListener);
-        this.doRouting(window.location.pathname);
+        this.resolve(window.location.pathname).then(resolveResult => this.render(resolveResult));
     }
 
     destroy() {
         window.removeEventListener("popstate", this.popStateListener);
     }
 
-    private doRouting(pathname: string): Promise<boolean> {
+    private resolve(pathname: string): Promise<ResolveResult<T>> {
         let currentRoute = this.getRoute(pathname);
-        return Promise.resolve(this.routeResolver.resolve(this.lastRoute, currentRoute, this))
-            .then(resolved => {
-                if (resolved) {
-                    this.routeRenderer.render(resolved);
-                    this.lastRoute = currentRoute;
-                    return true;
-                }
-                return false;
-            });
+        return Promise.resolve(this.routeResolver.resolve(this.lastRoute, currentRoute, this)).then(resolved => {
+            if (resolved) {
+                return { resolved, currentRoute };
+            }
+            return false;
+        });
+    }
+
+    private render(resolveResult: ResolveResult<T>) {
+        if (resolveResult) {
+            this.routeRenderer.render(resolveResult.resolved);
+            this.lastRoute = resolveResult.currentRoute;
+            return true;
+        }
+        return false;
     }
 
     private getRoute(pathname: string) {
@@ -58,14 +67,15 @@ export class Router<T> {
 
     navigate(relative: string, title: string, replace?: boolean) {
         let url = new URL(relative, this.baseHref);
-        this.doRouting(url.pathname).then(resolved => {
-            if (resolved) {
+        this.resolve(url.pathname).then(resolveResult => {
+            if (resolveResult) {
                 if (replace) {
                     window.history.replaceState({}, title || document.title, url.href);
                 } else {
                     window.history.pushState({}, title || document.title, url.href);
                 }
             }
+            this.render(resolveResult);
         });
     }
 }
