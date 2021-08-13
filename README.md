@@ -1,4 +1,12 @@
-Dead simple vanilla js single page router
+# route-it
+Dead simple no framework, vanilla js single page router.
+
+[![NPM version](http://img.shields.io/npm/v/route-it)](https://npmjs.org/package/route-it)
+
+This package brings a tiny basis for implementing spa routing to your application. It handles `<base href>`, `popstate` (back button) and switching pages/components.
+You implement a method which resolves paths to plain HTML Elements or web components.
+
+It depends on your applications needs how sophisticated that is. Sometimes a simple switchcase is enough, sometimes you might want to extract path & query parameters from the URL or even run async operations before resolving a component.
 
 ## Usage
 Configure the `<base href="/simple/">`.
