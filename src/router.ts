@@ -1,15 +1,22 @@
 export interface RouteResolver<T> {
-    resolve(lastRoute: string, currentRoute: string, router: Router<any>): T | false;
+    resolve(lastRoute: string, currentRoute: string, router: Router<any>, url: {
+        searchParams: URLSearchParams;
+    }): T | false;
 }
 
 export interface AsyncRouteResolver<T> {
-    resolve(lastRoute: string, currentRoute: string, router: Router<any>): Promise<T | false>;
+    resolve(lastRoute: string, currentRoute: string, router: Router<any>, url: {
+        searchParams: URLSearchParams;
+    }): Promise<T | false>;
 }
 
 export interface RouteRenderer<T> {
     render(component: T): void;
 }
 
+type URLInfo = {
+    searchParams: URLSearchParams;
+};
 
 type ResolveResult<T> = false | { resolved: T, currentRoute: string };
 
@@ -25,7 +32,7 @@ export class Router<T> {
     }
 
     private handlePopState(ev: PopStateEvent) {
-        this.resolve(window.location.pathname).then(resolveResult => this.render(resolveResult));
+        this.resolve(window.location.pathname, { searchParams: new URLSearchParams(window.location.search) }).then(resolveResult => this.render(resolveResult));
     }
 
     run() {
@@ -33,16 +40,16 @@ export class Router<T> {
         this.basePrefix = baseElement.getAttribute("href");
         this.baseHref = baseElement.href;
         window.addEventListener("popstate", this.popStateListener);
-        this.resolve(window.location.pathname).then(resolveResult => this.render(resolveResult));
+        this.resolve(window.location.pathname, { searchParams: new URLSearchParams(window.location.search) }).then(resolveResult => this.render(resolveResult));
     }
 
     destroy() {
         window.removeEventListener("popstate", this.popStateListener);
     }
 
-    private resolve(pathname: string): Promise<ResolveResult<T>> {
+    private resolve(pathname: string, urlInfo: URLInfo): Promise<ResolveResult<T>> {
         let currentRoute = this.getRoute(pathname);
-        return Promise.resolve(this.routeResolver.resolve(this.lastRoute, currentRoute, this)).then(resolved => {
+        return Promise.resolve(this.routeResolver.resolve(this.lastRoute, currentRoute, this, urlInfo)).then(resolved => {
             if (resolved) {
                 return { resolved, currentRoute };
             }
@@ -62,12 +69,12 @@ export class Router<T> {
     private getRoute(pathname: string) {
         let exactBaseHrefMatch = pathname === this.baseHref;
         let startsWithBase = pathname.substr(0, this.basePrefix.length) === this.basePrefix;
-        return exactBaseHrefMatch ? '/' : startsWithBase ? pathname.substring(this.basePrefix.length) : pathname;
+        return exactBaseHrefMatch ? "" : startsWithBase ? pathname.substring(this.basePrefix.length) : pathname;
     }
 
     navigate(relative: string, title: string, replace?: boolean) {
         let url = new URL(relative, this.baseHref);
-        this.resolve(url.pathname).then(resolveResult => {
+        this.resolve(url.pathname, url).then(resolveResult => {
             if (resolveResult) {
                 if (replace) {
                     window.history.replaceState({}, title || document.title, url.href);
